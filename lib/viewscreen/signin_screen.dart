@@ -1,4 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:lesson3/controller/firebaseauth_controller.dart';
+import 'package:lesson3/model/constant.dart';
+import 'package:lesson3/viewscreen/userhome_screen.dart';
+import 'package:lesson3/viewscreen/view/mydialog.dart';
 
 class SignInScreen extends StatefulWidget {
   static const routeName = '/signInScreen';
@@ -66,18 +71,61 @@ class _SignInState extends State<SignInScreen> {
 class _Controller {
   late _SignInState state;
   _Controller(this.state);
+  String? email;
+  String? password;
 
   String? validateEmail(String? value) {
-    return null;
+    if (value == null || !(value.contains('.') && value.contains('@')))
+      return 'Invalid email address';
+    else
+      return null;
   }
 
-  void saveEmail(String? value) { }
+  void saveEmail(String? value) {
+    if (value != null) email = value;
+  }
 
   String? validatePassword(String? value) {
-    return null;
+    if (value == null || value.length < 6)
+      return 'Invalid password';
+    else
+      return null;
   }
 
-  void savePassword(String? value) { }
+  void savePassword(String? value) {
+    if (value != null) password = value;
+  }
 
-  void signIn() { }
+  void signIn() async {
+    FormState? currentState = state.formKey.currentState;
+    if (currentState == null || !currentState.validate()) return;
+
+    currentState.save();
+
+    print('======== $email $password');
+
+    User? user;
+    try {
+      if (email == null || password == null) {
+        throw 'Email or password is null';
+      }
+      user = await FirebaseAuthController.signIn(
+          email: email!, password: password!);
+      //print('======== ${user?.email}');
+      Navigator.pushNamed(
+        state.context,
+        UserHomeScreen.routeName,
+        arguments: {
+          ARGS.USER: user,
+        },
+      );
+    } catch (e) {
+      if (Constant.DEV) print('======== signIn error: $e');
+      MyDialog.showSnackBar(
+        context: state.context,
+        message: 'Sign in Error: $e',
+        seconds: 30,
+      );
+    }
+  }
 }

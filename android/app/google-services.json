@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "144156778882",
+    "project_id": "cs4303-davidr-lesson3",
+    "storage_bucket": "cs4303-davidr-lesson3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:144156778882:android:a31409a0972e4681a1ef9b",
+        "android_client_info": {
+          "package_name": "edu.uco.drussell22.MAP.lesson3"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "144156778882-473100pvfaj5f5hkmpf9is5tbp8ot2ep.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAlVy7FQp8KE-CxXDumzR9KMARII5DeEBw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "144156778882-473100pvfaj5f5hkmpf9is5tbp8ot2ep.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
