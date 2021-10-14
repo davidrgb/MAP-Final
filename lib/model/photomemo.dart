@@ -1,3 +1,7 @@
+enum PhotoSource {
+  CAMERA, GALLERY,
+}
+
 class PhotoMemo {
   String? docId;
   late String createdBy;
@@ -22,5 +26,22 @@ class PhotoMemo {
   }) {
     this.sharedWith = sharedWith == null ? [] : [...sharedWith];
     this.imageLabels = imageLabels == null ? [] : [...imageLabels];
+  }
+
+  static String? validateTitle(String? value) {
+    return value == null || value.trim().length < 3 ? 'Title too short' : null;
+  }
+
+  static String? validateMemo(String? value) {
+    return value == null || value.trim().length < 5 ? 'Memo too short' : null;
+  }
+  
+  static String? validateSharedWith(String? value) {
+    if (value == null || value.trim().length == 0) return null;
+    List<String> emailList = value.trim().split(RegExp('(,| )+')).map((e) => e.trim()).toList();
+    for (String e in emailList) {
+      if (e.contains('@') && e.contains('.')) continue;
+      else return 'Invalid email list: comma or space separated list';
+    }
   }
 }
