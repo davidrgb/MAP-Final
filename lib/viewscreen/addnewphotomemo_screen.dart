@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lesson3/controller/cloudstorage_controller.dart';
+import 'package:lesson3/controller/firestore_controller.dart';
 import 'package:lesson3/model/constant.dart';
 import 'package:lesson3/model/photomemo.dart';
 import 'package:lesson3/viewscreen/view/mydialog.dart';
@@ -11,8 +12,9 @@ import 'package:lesson3/viewscreen/view/mydialog.dart';
 class AddNewPhotoMemoScreen extends StatefulWidget {
   static const routeName = '/addNewPhotoMemoScreen';
   late final User user;
+  final List<PhotoMemo> photoMemoList;
 
-  AddNewPhotoMemoScreen({required this.user});
+  AddNewPhotoMemoScreen({required this.user, required this.photoMemoList});
 
   @override
   State<StatefulWidget> createState() {
@@ -135,6 +137,8 @@ class _Controller {
       return;
     }
 
+    MyDialog.circularProgressStart(state.context);
+
     try {
       Map photoInfo = await CloudStorageController.uploadPhotoFile(
           photo: state.photo!,
@@ -147,9 +151,21 @@ class _Controller {
                 progressMessage = 'Uploading $progress %';
             });
           });
-      print('======== photo filename: ${photoInfo[ARGS.Filename]}');
-      print('======== photo URL: ${photoInfo[ARGS.DownloadURL]}');
+      tempMemo.photoFilename = photoInfo[ARGS.Filename];
+      tempMemo.photoURL = photoInfo[ARGS.DownloadURL];
+      tempMemo.createdBy = state.widget.user.email!;
+      tempMemo.timestamp = DateTime.now();
+
+      String docId = await FirestoreController.addPhotoMemo(photoMemo: tempMemo);
+      tempMemo.docId = docId;
+      state.widget.photoMemoList.insert(0, tempMemo);
+
+      MyDialog.circularProgressStop(state.context);
+
+      Navigator.pop(state.context);
+
     } catch (e) {
+      MyDialog.circularProgressStop(state.context);
       if (Constant.DEV) print('======== Add new photomemo failed: $e');
       MyDialog.showSnackBar(
         context: state.context,
@@ -185,6 +201,7 @@ class _Controller {
 
   void saveSharedWith(String? value) {
     if (value != null && value.trim().length != 0) {
+      tempMemo.sharedWith.clear();
       tempMemo.sharedWith.addAll(value.trim().split(RegExp('(,| )+')));
     }
   }

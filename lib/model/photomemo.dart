@@ -3,6 +3,16 @@ enum PhotoSource {
 }
 
 class PhotoMemo {
+
+  static const TITLE = 'title';
+  static const MEMO = 'memo';
+  static const CREATED_BY = 'createdby';
+  static const PHOTO_URL = 'photoURL';
+  static const PHOTO_FILENAME = 'photofilename';
+  static const TIMESTAMP = 'timestamp';
+  static const SHARED_WITH = 'sharedwith';
+  static const IMAGE_LABELS = 'imagelabels';
+
   String? docId;
   late String createdBy;
   late String title;
@@ -26,6 +36,38 @@ class PhotoMemo {
   }) {
     this.sharedWith = sharedWith == null ? [] : [...sharedWith];
     this.imageLabels = imageLabels == null ? [] : [...imageLabels];
+  }
+
+  Map<String, dynamic> toFirestoreDoc() {
+    return {
+      TITLE: this.title,
+      CREATED_BY: this.createdBy,
+      MEMO: this.memo,
+      PHOTO_FILENAME: this.photoFilename,
+      PHOTO_URL: this.photoURL,
+      TIMESTAMP: this.timestamp,
+      SHARED_WITH: this.sharedWith,
+      IMAGE_LABELS: this.imageLabels,
+    };
+  }
+
+  static PhotoMemo? fromFirestoreDoc({required Map<String, dynamic> doc, required String docId}) {
+    for (var key in doc.keys) {
+      if (doc[key] == null) return null;
+    }
+    return PhotoMemo(
+      docId: docId,
+      createdBy: doc[CREATED_BY] ??= 'N/A',
+      title: doc[TITLE] ??= 'N/A',
+      memo: doc[MEMO] ??= 'N/A',
+      photoFilename: doc[PHOTO_FILENAME],
+      photoURL: doc[PHOTO_URL] ??= 'N/A',
+      sharedWith: doc[SHARED_WITH] ??= [],
+      imageLabels: doc[IMAGE_LABELS] ??= [],
+      timestamp: doc[TIMESTAMP] != null ? 
+        DateTime.fromMillisecondsSinceEpoch(doc[TIMESTAMP].millisecondsSinceEpoch)
+        : DateTime.now(),
+    );
   }
 
   static String? validateTitle(String? value) {
