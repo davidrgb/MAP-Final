@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lesson3/controller/cloudstorage_controller.dart';
 import 'package:lesson3/controller/firestore_controller.dart';
+import 'package:lesson3/controller/googleML_controller.dart';
 import 'package:lesson3/model/constant.dart';
 import 'package:lesson3/model/photomemo.dart';
 import 'package:lesson3/viewscreen/view/mydialog.dart';
@@ -29,6 +30,7 @@ class _DetailedViewState extends State<DetailedViewScreen> {
   bool editMode = false;
   late _Controller con;
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  String? progressMessage;
 
   @override
   void initState() {
@@ -89,6 +91,14 @@ class _DetailedViewState extends State<DetailedViewScreen> {
                         ),
                 ],
               ),
+              progressMessage == null
+                  ? SizedBox(
+                      height: 1.0,
+                    )
+                  : Text(
+                      progressMessage!,
+                      style: Theme.of(context).textTheme.headline6,
+                    ),
               TextFormField(
                 enabled: editMode,
                 style: Theme.of(context).textTheme.headline6,
@@ -126,6 +136,13 @@ class _DetailedViewState extends State<DetailedViewScreen> {
                 validator: PhotoMemo.validateSharedWith,
                 onSaved: con.saveSharedWith,
               ),
+              Constant.DEV
+                  ? Text(
+                    'Image Labels by ML\n${con.tempMemo.imageLabels}'
+                  )
+                  : SizedBox(
+                      height: 1.0,
+                    ),
             ],
           ),
         ),
@@ -163,6 +180,7 @@ class _Controller {
     if (currentState == null || !currentState.validate()) return;
     currentState.save();
 
+    MyDialog.circularProgressStart(state.context);
     try {
       Map<String, dynamic> updateInfo = {};
       if (photo != null) {
@@ -171,11 +189,18 @@ class _Controller {
           uid: state.widget.user.uid,
           filename: tempMemo.photoFilename,
           listener: (int progress) {
-            print('======== uploading: $progress');
+            state.render(() {
+              state.progressMessage =
+                  progress == 100 ? null : 'Uploading: $progress %';
+            });
           },
         );
+        List<String> recognitions = await GoogleMLController.getImageLabels(photo: photo!);
+        tempMemo.imageLabels = recognitions;
+
         tempMemo.photoURL = photoInfo[ARGS.DownloadURL];
         updateInfo[PhotoMemo.PHOTO_URL] = tempMemo.photoURL;
+        updateInfo[PhotoMemo.IMAGE_LABELS] = tempMemo.imageLabels;
       }
 
       if (tempMemo.title != state.widget.photoMemo.title)
@@ -192,15 +217,17 @@ class _Controller {
             docId: tempMemo.docId!, updateInfo: updateInfo);
         state.widget.photoMemo.assign(tempMemo);
       }
+
+      MyDialog.circularProgressStop(state.context);
+      state.render(() => state.editMode = false);
     } catch (e) {
+      MyDialog.circularProgressStop(state.context);
       if (Constant.DEV) print('======= update photomemo error: $e');
       MyDialog.showSnackBar(
         context: state.context,
         message: 'Update PhotoMemo error, $e',
       );
     }
-
-    state.render(() => state.editMode = false);
   }
 
   void edit() {

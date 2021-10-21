@@ -42,4 +42,23 @@ class FirestoreController {
         .doc(docId)
         .update(updateInfo);
   }
+
+  static Future<List<PhotoMemo>> searchImages({
+    required String createdBy,
+    required List<String> searchLabels,
+  }) async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection(Constant.PHOTOMEMO_COLLECTION)
+        .where(PhotoMemo.CREATED_BY, isEqualTo: createdBy)
+        .where(PhotoMemo.IMAGE_LABELS, arrayContainsAny: searchLabels)
+        .orderBy(PhotoMemo.TIMESTAMP, descending: true)
+        .get();
+
+    var results = <PhotoMemo>[];
+    querySnapshot.docs.forEach((doc) { 
+      var p = PhotoMemo.fromFirestoreDoc(doc: doc.data() as Map<String, dynamic>, docId: doc.id);
+      if (p != null) results.add(p);
+    });
+    return results;
+  }
 }
