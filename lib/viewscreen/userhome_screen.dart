@@ -4,6 +4,7 @@ import 'package:lesson3/controller/firebaseauth_controller.dart';
 import 'package:lesson3/model/constant.dart';
 import 'package:lesson3/model/photomemo.dart';
 import 'package:lesson3/viewscreen/addnewphotomemo_screen.dart';
+import 'package:lesson3/viewscreen/detailedview_screen.dart';
 import 'package:lesson3/viewscreen/view/webimage.dart';
 
 class UserHomeScreen extends StatefulWidget {
@@ -86,11 +87,15 @@ class _UserHomeState extends State<UserHomeScreen> {
                                   '...'
                               : widget.photoMemoList[index].memo,
                         ),
-                        Text('Created By: ${widget.photoMemoList[index].createdBy}'),
-                        Text('SharedWith: ${widget.photoMemoList[index].sharedWith}'),
-                        Text('Timestamp: ${widget.photoMemoList[index].timestamp}'),
+                        Text(
+                            'Created By: ${widget.photoMemoList[index].createdBy}'),
+                        Text(
+                            'SharedWith: ${widget.photoMemoList[index].sharedWith}'),
+                        Text(
+                            'Timestamp: ${widget.photoMemoList[index].timestamp}'),
                       ],
                     ),
+                    onTap: () => con.onTap(index),
                   );
                 },
               ),
@@ -102,6 +107,17 @@ class _UserHomeState extends State<UserHomeScreen> {
 class _Controller {
   late _UserHomeState state;
   _Controller(this.state);
+
+  void onTap(int index) {
+    Navigator.pushNamed(
+      state.context,
+      DetailedViewScreen.routeName,
+      arguments: {
+        ARGS.USER: state.widget.user,
+        ARGS.OnePhotoMemo: state.widget.photoMemoList[index],
+      }
+    );
+  }
 
   void addButton() async {
     await Navigator.pushNamed(state.context, AddNewPhotoMemoScreen.routeName,

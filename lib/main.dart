@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:lesson3/model/constant.dart';
 import 'package:lesson3/viewscreen/addnewphotomemo_screen.dart';
+import 'package:lesson3/viewscreen/detailedview_screen.dart';
 import 'package:lesson3/viewscreen/internalerror_screen.dart';
 import 'package:lesson3/viewscreen/signin_screen.dart';
 import 'package:lesson3/viewscreen/userhome_screen.dart';
@@ -18,6 +19,10 @@ class Lesson3App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: Constant.DEV,
+      theme: ThemeData(
+        brightness: Constant.DARKMODE ? Brightness.dark : Brightness.light,
+        primaryColor: Colors.blueAccent,
+      ),
       initialRoute: SignInScreen.routeName,
       routes: {
         SignInScreen.routeName: (context) => SignInScreen(),
@@ -40,9 +45,23 @@ class Lesson3App extends StatelessWidget {
             var argument = args as Map;
             var user = argument[ARGS.USER];
             var photoMemoList = argument[ARGS.PhotoMemoList];
-            return AddNewPhotoMemoScreen(user: user, photoMemoList: photoMemoList,);
+            return AddNewPhotoMemoScreen(
+              user: user,
+              photoMemoList: photoMemoList,
+            );
           }
         },
+        DetailedViewScreen.routeName: (context) {
+          Object? args = ModalRoute.of(context)?.settings.arguments;
+          if (args == null) {
+            return InternalErrorScreen('args is null at DetailedViewScreen');
+          } else {
+            var argument = args as Map;
+            var user = argument[ARGS.USER];
+            var photoMemo = argument[ARGS.OnePhotoMemo];
+            return DetailedViewScreen(user: user, photoMemo: photoMemo);
+          }
+        }
       },
     );
   }
