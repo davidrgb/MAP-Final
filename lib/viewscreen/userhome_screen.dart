@@ -7,6 +7,7 @@ import 'package:lesson3/model/constant.dart';
 import 'package:lesson3/model/photomemo.dart';
 import 'package:lesson3/viewscreen/addnewphotomemo_screen.dart';
 import 'package:lesson3/viewscreen/detailedview_screen.dart';
+import 'package:lesson3/viewscreen/sharedwith_screen.dart';
 import 'package:lesson3/viewscreen/view/mydialog.dart';
 import 'package:lesson3/viewscreen/view/webimage.dart';
 
@@ -90,6 +91,11 @@ class _UserHomeState extends State<UserHomeScreen> {
                 accountEmail: Text(widget.email),
               ),
               ListTile(
+                leading: Icon(Icons.people),
+                title: Text('Shared With'),
+                onTap: con.sharedWith,
+              ),
+              ListTile(
                 leading: Icon(Icons.exit_to_app),
                 title: Text('Sign Out'),
                 onTap: con.signOut,
@@ -118,6 +124,7 @@ class _UserHomeState extends State<UserHomeScreen> {
                         url: con.photoMemoList[index].photoURL,
                         context: context,
                       ),
+                      trailing: Icon(Icons.arrow_right),
                       title: Text(con.photoMemoList[index].title),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,6 +163,28 @@ class _Controller {
 
   _Controller(this.state) {
     photoMemoList = state.widget.photoMemoList;
+  }
+
+  void sharedWith() async {
+    try {
+      List<PhotoMemo> photoMemoList =
+          await FirestoreController.getPhotoMemoListSharedWith(email: state.widget.email);
+      await Navigator.pushNamed(
+        state.context,
+        SharedWithScreen.routeName,
+        arguments: {
+          ARGS.PhotoMemoList: photoMemoList,
+          ARGS.USER: state.widget.user,
+        },
+      );
+      Navigator.of(state.context).pop();
+    } catch (e) {
+      if (Constant.DEV) print('======== sharedWith error: $e');
+      MyDialog.showSnackBar(
+        context: state.context,
+        message: 'Failed to get sharedWith list: $e',
+      );
+    }
   }
 
   void delete() async {
