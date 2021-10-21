@@ -1,6 +1,14 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:lesson3/controller/cloudstorage_controller.dart';
+import 'package:lesson3/controller/firestore_controller.dart';
+import 'package:lesson3/model/constant.dart';
 import 'package:lesson3/model/photomemo.dart';
+import 'package:lesson3/viewscreen/view/mydialog.dart';
 import 'package:lesson3/viewscreen/view/webimage.dart';
 
 class DetailedViewScreen extends StatefulWidget {
@@ -50,29 +58,32 @@ class _DetailedViewState extends State<DetailedViewScreen> {
                 children: [
                   Container(
                     height: MediaQuery.of(context).size.height * 0.35,
-                    child: WebImage(
-                      url: con.tempMemo.photoURL,
-                      context: context,
-                    ),
+                    child: con.photo == null
+                        ? WebImage(
+                            url: con.tempMemo.photoURL,
+                            context: context,
+                          )
+                        : Image.file(con.photo!),
                   ),
                   editMode
                       ? Positioned(
-                        right: 0.0,
-                        bottom: 0.0,
-                        child: Container(
-                          color: Colors.blue,
-                          child: PopupMenuButton(
+                          right: 0.0,
+                          bottom: 0.0,
+                          child: Container(
+                            color: Colors.blue,
+                            child: PopupMenuButton(
                               onSelected: con.getPhoto,
                               itemBuilder: (context) => [
                                 for (var source in PhotoSource.values)
                                   PopupMenuItem<PhotoSource>(
                                     value: source,
-                                    child: Text('${source.toString().split('.')[1]}'),
+                                    child: Text(
+                                        '${source.toString().split('.')[1]}'),
                                   )
                               ],
                             ),
-                        ),
-                      )
+                          ),
+                        )
                       : SizedBox(
                           height: 1.0,
                         ),
@@ -87,7 +98,7 @@ class _DetailedViewState extends State<DetailedViewScreen> {
                 initialValue: con.tempMemo.title,
                 autocorrect: true,
                 validator: PhotoMemo.validateTitle,
-                onSaved: null,
+                onSaved: con.saveTitle,
               ),
               TextFormField(
                 enabled: editMode,
@@ -100,7 +111,7 @@ class _DetailedViewState extends State<DetailedViewScreen> {
                 maxLines: 6,
                 autocorrect: true,
                 validator: PhotoMemo.validateMemo,
-                onSaved: null,
+                onSaved: con.saveMemo,
               ),
               TextFormField(
                 enabled: editMode,
@@ -113,7 +124,7 @@ class _DetailedViewState extends State<DetailedViewScreen> {
                 maxLines: 2,
                 autocorrect: false,
                 validator: PhotoMemo.validateSharedWith,
-                onSaved: null,
+                onSaved: con.saveSharedWith,
               ),
             ],
           ),
@@ -126,19 +137,88 @@ class _DetailedViewState extends State<DetailedViewScreen> {
 class _Controller {
   late _DetailedViewState state;
   late PhotoMemo tempMemo;
+  File? photo;
   _Controller(this.state) {
     tempMemo = PhotoMemo.clone(state.widget.photoMemo);
   }
 
-  void getPhoto(PhotoSource source) {
-
+  void getPhoto(PhotoSource source) async {
+    try {
+      var imageSource = source == PhotoSource.CAMERA
+          ? ImageSource.camera
+          : ImageSource.gallery;
+      XFile? image = await ImagePicker().pickImage(source: imageSource);
+      if (image == null) return;
+      state.render(() => photo = File(image.path));
+    } catch (e) {
+      MyDialog.showSnackBar(
+        context: state.context,
+        message: 'Failed to get a picture: $e',
+      );
+    }
   }
 
-  void update() {
+  void update() async {
+    FormState? currentState = state.formKey.currentState;
+    if (currentState == null || !currentState.validate()) return;
+    currentState.save();
+
+    try {
+      Map<String, dynamic> updateInfo = {};
+      if (photo != null) {
+        Map photoInfo = await CloudStorageController.uploadPhotoFile(
+          photo: photo!,
+          uid: state.widget.user.uid,
+          filename: tempMemo.photoFilename,
+          listener: (int progress) {
+            print('======== uploading: $progress');
+          },
+        );
+        tempMemo.photoURL = photoInfo[ARGS.DownloadURL];
+        updateInfo[PhotoMemo.PHOTO_URL] = tempMemo.photoURL;
+      }
+
+      if (tempMemo.title != state.widget.photoMemo.title)
+        updateInfo[PhotoMemo.TITLE] = tempMemo.title;
+      if (tempMemo.memo != state.widget.photoMemo.memo)
+        updateInfo[PhotoMemo.MEMO] = tempMemo.memo;
+      if (!listEquals(tempMemo.sharedWith, state.widget.photoMemo.sharedWith))
+        updateInfo[PhotoMemo.SHARED_WITH] = tempMemo.sharedWith;
+
+      if (updateInfo.isNotEmpty) {
+        tempMemo.timestamp = DateTime.now();
+        updateInfo[PhotoMemo.TIMESTAMP] = tempMemo.timestamp;
+        FirestoreController.updatePhotoMemo(
+            docId: tempMemo.docId!, updateInfo: updateInfo);
+        state.widget.photoMemo.assign(tempMemo);
+      }
+    } catch (e) {
+      if (Constant.DEV) print('======= update photomemo error: $e');
+      MyDialog.showSnackBar(
+        context: state.context,
+        message: 'Update PhotoMemo error, $e',
+      );
+    }
+
     state.render(() => state.editMode = false);
   }
 
   void edit() {
     state.render(() => state.editMode = true);
+  }
+
+  void saveTitle(String? value) {
+    if (value != null) tempMemo.title = value;
+  }
+
+  void saveMemo(String? value) {
+    if (value != null) tempMemo.memo = value;
+  }
+
+  void saveSharedWith(String? value) {
+    if (value != null && value.trim().length != 0) {
+      tempMemo.sharedWith.clear();
+      tempMemo.sharedWith.addAll(value.trim().split(RegExp('(,| )+')));
+    }
   }
 }
