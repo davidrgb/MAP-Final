@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:lesson3/controller/cloudstorage_controller.dart';
 import 'package:lesson3/controller/firebaseauth_controller.dart';
 import 'package:lesson3/controller/firestore_controller.dart';
 import 'package:lesson3/model/constant.dart';
@@ -157,11 +158,35 @@ class _Controller {
     photoMemoList = state.widget.photoMemoList;
   }
 
-  void delete() {
-
+  void delete() async {
+    MyDialog.circularProgressStart(state.context);
+    delIndexes.sort();
+    for (int i = delIndexes.length - 1; i >= 0; i--) {
+      try {
+        PhotoMemo p = photoMemoList[delIndexes[i]];
+        await FirestoreController.deletePhotoMemo(photoMemo: p);
+        await CloudStorageController.deletePhotoFile(photoMemo: p);
+        state.render(() {
+          photoMemoList.removeAt(delIndexes[i]);
+        });
+      } catch (e) {
+        if (Constant.DEV) print('======= failed to delete photomemo: $e');
+        MyDialog.showSnackBar(
+          context: state.context,
+          message: 'Failed to delete PhotoMemo: $e',
+        );
+        break;
+      }
+    }
+    MyDialog.circularProgressStop(state.context);
+    state.render(() => delIndexes.clear());
   }
 
-  void cancelDelete() {}
+  void cancelDelete() {
+    state.render(() {
+      delIndexes.clear();
+    });
+  }
 
   void onLongPress(int index) {
     state.render(() {

@@ -6,6 +6,7 @@ import 'package:lesson3/controller/firebaseauth_controller.dart';
 import 'package:lesson3/controller/firestore_controller.dart';
 import 'package:lesson3/model/constant.dart';
 import 'package:lesson3/model/photomemo.dart';
+import 'package:lesson3/viewscreen/signup_screen.dart';
 import 'package:lesson3/viewscreen/userhome_screen.dart';
 import 'package:lesson3/viewscreen/view/mydialog.dart';
 
@@ -72,6 +73,16 @@ class _SignInState extends State<SignInScreen> {
                     style: Theme.of(context).textTheme.button,
                   ),
                 ),
+                SizedBox(
+                  height: 20.0,
+                ),
+                ElevatedButton(
+                  onPressed: con.signUp,
+                  child: Text(
+                    'Create  a new account',
+                    style: Theme.of(context).textTheme.button,
+                  ),
+                ),
               ],
             ),
           ),
@@ -86,6 +97,10 @@ class _Controller {
   _Controller(this.state);
   String? email;
   String? password;
+
+  void signUp() {
+    Navigator.pushNamed(state.context, SignUpScreen.routeName);
+  }
 
   String? validateEmail(String? value) {
     if (value == null || !(value.contains('.') && value.contains('@')))

@@ -6,6 +6,7 @@ import 'package:lesson3/viewscreen/addnewphotomemo_screen.dart';
 import 'package:lesson3/viewscreen/detailedview_screen.dart';
 import 'package:lesson3/viewscreen/internalerror_screen.dart';
 import 'package:lesson3/viewscreen/signin_screen.dart';
+import 'package:lesson3/viewscreen/signup_screen.dart';
 import 'package:lesson3/viewscreen/userhome_screen.dart';
 
 void main() async {
@@ -61,7 +62,8 @@ class Lesson3App extends StatelessWidget {
             var photoMemo = argument[ARGS.OnePhotoMemo];
             return DetailedViewScreen(user: user, photoMemo: photoMemo);
           }
-        }
+        },
+        SignUpScreen.routeName: (context) => SignUpScreen(),
       },
     );
   }

@@ -55,10 +55,20 @@ class FirestoreController {
         .get();
 
     var results = <PhotoMemo>[];
-    querySnapshot.docs.forEach((doc) { 
-      var p = PhotoMemo.fromFirestoreDoc(doc: doc.data() as Map<String, dynamic>, docId: doc.id);
+    querySnapshot.docs.forEach((doc) {
+      var p = PhotoMemo.fromFirestoreDoc(
+          doc: doc.data() as Map<String, dynamic>, docId: doc.id);
       if (p != null) results.add(p);
     });
     return results;
+  }
+
+  static Future<void> deletePhotoMemo({
+    required PhotoMemo photoMemo,
+  }) async {
+    await FirebaseFirestore.instance
+        .collection(Constant.PHOTOMEMO_COLLECTION)
+        .doc(photoMemo.docId)
+        .delete();
   }
 }
