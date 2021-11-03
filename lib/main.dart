@@ -13,10 +13,10 @@ import 'package:lesson3/viewscreen/userhome_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(Lesson3App());
+  runApp(FinalApp());
 }
 
-class Lesson3App extends StatelessWidget {
+class FinalApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
