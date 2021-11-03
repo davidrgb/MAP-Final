@@ -1,8 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:lesson3/controller/firestore_controller.dart';
+import 'package:lesson3/model/comment.dart';
 import 'package:lesson3/model/constant.dart';
 import 'package:lesson3/model/photomemo.dart';
-import 'package:lesson3/viewscreen/view/commentview_screen.dart';
+import 'package:lesson3/viewscreen/commentview_screen.dart';
+import 'package:lesson3/viewscreen/view/mydialog.dart';
 import 'package:lesson3/viewscreen/view/webimage.dart';
 
 class SharedWithScreen extends StatefulWidget {
@@ -51,11 +54,28 @@ class _SharedWithState extends State<SharedWithScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Center(
-                              child: WebImage(
-                                url: widget.photoMemoList[i].photoURL,
-                                context: context,
-                                height:
-                                    MediaQuery.of(context).size.height * 0.35,
+                              child: Stack(
+                                children: [
+                                  WebImage(
+                                    url: widget.photoMemoList[i].photoURL,
+                                    context: context,
+                                    height: MediaQuery.of(context).size.height *
+                                        0.35,
+                                  ),
+                                  if (con.memoHasCommments.isNotEmpty)
+                                    con.memoHasCommments[i]
+                                        ? Positioned(
+                                            bottom: 10.0,
+                                            right: 10.0,
+                                            child: Icon(
+                                              Icons.comment,
+                                              size: 36.0,
+                                            ),
+                                          )
+                                        : SizedBox(
+                                            height: 1.0,
+                                          ),
+                                ],
                               ),
                             ),
                             Text(
@@ -63,10 +83,14 @@ class _SharedWithState extends State<SharedWithScreen> {
                               style: Theme.of(context).textTheme.headline6,
                             ),
                             Text(widget.photoMemoList[i].memo),
-                            Text('Created by: ${widget.photoMemoList[i].createdBy}'),
-                            Text('Created at: ${widget.photoMemoList[i].timestamp}'),
-                            Text('Shared with: ${widget.photoMemoList[i].sharedWith}'),
-                            Text('Image Labels: ${widget.photoMemoList[i].imageLabels}'),
+                            Text(
+                                'Created by: ${widget.photoMemoList[i].createdBy}'),
+                            Text(
+                                'Created at: ${widget.photoMemoList[i].timestamp}'),
+                            Text(
+                                'Shared with: ${widget.photoMemoList[i].sharedWith}'),
+                            Text(
+                                'Image Labels: ${widget.photoMemoList[i].imageLabels}'),
                           ],
                         ),
                       ),
@@ -82,8 +106,11 @@ class _SharedWithState extends State<SharedWithScreen> {
 class _Controller {
   late _SharedWithState state;
   late List<PhotoMemo> photoMemoList;
+  late List<bool> memoHasCommments;
   _Controller(this.state) {
     photoMemoList = state.widget.photoMemoList;
+    memoHasCommments = [];
+    checkComments();
   }
 
   void onTap(int index) async {
@@ -92,5 +119,25 @@ class _Controller {
           ARGS.USER: state.widget.user,
           ARGS.OnePhotoMemo: photoMemoList[index],
         });
+  }
+
+  void checkComments() async {
+    for (int i = 0; i < photoMemoList.length; i++) {
+      late List<Comment> results;
+      try {
+        results = await FirestoreController.getCommentList(
+            photoMemoID: state.widget.photoMemoList[i].docId!);
+      } catch (e) {
+        if (Constant.DEV) print('======== Failed to get comment list: $e');
+        MyDialog.showSnackBar(
+            context: state.context,
+            message: '======== Failed to get comment list: $e');
+      }
+      if (results.isNotEmpty)
+        memoHasCommments.insert(i, true);
+      else
+        memoHasCommments.insert(i, false);
+    }
+    state.render(() {});
   }
 }

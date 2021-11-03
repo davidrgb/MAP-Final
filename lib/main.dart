@@ -9,7 +9,7 @@ import 'package:lesson3/viewscreen/sharedwith_screen.dart';
 import 'package:lesson3/viewscreen/signin_screen.dart';
 import 'package:lesson3/viewscreen/signup_screen.dart';
 import 'package:lesson3/viewscreen/userhome_screen.dart';
-import 'package:lesson3/viewscreen/view/commentview_screen.dart';
+import 'package:lesson3/viewscreen/commentview_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
