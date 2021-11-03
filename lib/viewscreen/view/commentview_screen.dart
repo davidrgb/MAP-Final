@@ -53,22 +53,39 @@ class _CommentViewState extends State<CommentViewScreen> {
                 context: context,
               ),
             ),
-            con.commentList.isEmpty
-                ? SizedBox(
-                    height: 1.0,
-                  )
-                : ListView.builder(
-                    itemCount: con.commentList.length,
-                    itemBuilder: (context, index) {
-                      return Container(
-                        child: ListTile(
-                          title: Text(
-                              '${con.commentList[index].createdBy} at ${con.commentList[index].timestamp}'),
-                          subtitle: Text(con.commentList[index].content),
-                        ),
-                      );
-                    },
-                  ),
+            for (int i = 0; i < con.commentList.length; i++)
+              Card(
+                child: Column(
+                  children: [
+                    Text(
+                      '${con.commentList[i].createdBy} at ${con.commentList[i].timestamp}',
+                      style: Theme.of(context).textTheme.headline6,
+                    ),
+                    Text(con.commentList[i].content),
+                    con.commentList[i].createdBy == widget.user.email!
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () {},
+                                child: Text('Edit'),
+                                style: ElevatedButton.styleFrom(
+                                    primary: Colors.green),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {},
+                                child: Text('Delete'),
+                                style: ElevatedButton.styleFrom(
+                                    primary: Colors.red),
+                              ),
+                            ],
+                          )
+                        : SizedBox(
+                            height: 1.0,
+                          ),
+                  ],
+                ),
+              ),
             Form(
               key: newCommentFormKey,
               child: Column(
@@ -107,14 +124,16 @@ class _Controller {
   }
 
   void getComments() async {
+    late List<Comment> results;
     try {
-      commentList = await FirestoreController.getCommentList(
+      results = await FirestoreController.getCommentList(
           photoMemoID: state.widget.photoMemo.docId!);
     } catch (e) {
       if (Constant.DEV) print('======== getComment error: $e');
       MyDialog.showSnackBar(
           context: state.context, message: 'Failed to get comment list: $e');
     }
+    state.render(() => commentList = results);
   }
 
   void saveCommentContent(String? value) {
