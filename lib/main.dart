@@ -9,6 +9,7 @@ import 'package:lesson3/viewscreen/sharedwith_screen.dart';
 import 'package:lesson3/viewscreen/signin_screen.dart';
 import 'package:lesson3/viewscreen/signup_screen.dart';
 import 'package:lesson3/viewscreen/userhome_screen.dart';
+import 'package:lesson3/viewscreen/view/commentview_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,6 +75,17 @@ class FinalApp extends StatelessWidget {
             var user = argument[ARGS.USER];
             var photoMemoList = argument[ARGS.PhotoMemoList];
             return SharedWithScreen(user: user, photoMemoList: photoMemoList);
+          }
+        },
+        CommentViewScreen.routeName: (context) {
+          Object? args = ModalRoute.of(context)?.settings.arguments;
+          if (args == null) {
+            return InternalErrorScreen('args is null at CommentViewScreen');
+          } else {
+            var argument = args as Map;
+            var user = argument[ARGS.USER];
+            var photoMemo = argument[ARGS.OnePhotoMemo];
+            return CommentViewScreen(user: user, photoMemo: photoMemo);
           }
         },
       },
