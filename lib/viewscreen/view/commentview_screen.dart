@@ -55,35 +55,38 @@ class _CommentViewState extends State<CommentViewScreen> {
             ),
             for (int i = 0; i < con.commentList.length; i++)
               Card(
-                child: Column(
-                  children: [
-                    Text(
-                      '${con.commentList[i].createdBy} at ${con.commentList[i].timestamp}',
-                      style: Theme.of(context).textTheme.headline6,
-                    ),
-                    Text(con.commentList[i].content),
-                    con.commentList[i].createdBy == widget.user.email!
-                        ? Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              ElevatedButton(
-                                onPressed: () {},
-                                child: Text('Edit'),
-                                style: ElevatedButton.styleFrom(
-                                    primary: Colors.green),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {},
-                                child: Text('Delete'),
-                                style: ElevatedButton.styleFrom(
-                                    primary: Colors.red),
-                              ),
-                            ],
-                          )
-                        : SizedBox(
-                            height: 1.0,
-                          ),
-                  ],
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  child: Column(
+                    children: [
+                      Text(
+                        '${con.commentList[i].createdBy} at ${con.commentList[i].timestamp}',
+                        style: Theme.of(context).textTheme.headline6,
+                      ),
+                      Text(con.commentList[i].content, style: Theme.of(context).textTheme.subtitle1,),
+                      con.commentList[i].createdBy == widget.user.email!
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () {},
+                                  child: Text('Edit'),
+                                  style: ElevatedButton.styleFrom(
+                                      primary: Colors.green),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {},
+                                  child: Text('Delete'),
+                                  style: ElevatedButton.styleFrom(
+                                      primary: Colors.red),
+                                ),
+                              ],
+                            )
+                          : SizedBox(
+                              height: 1.0,
+                            ),
+                    ],
+                  ),
                 ),
               ),
             Form(
