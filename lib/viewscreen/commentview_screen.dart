@@ -155,7 +155,11 @@ class _Controller {
 
       String docId = await FirestoreController.addComment(comment: tempComment);
       tempComment.docId = docId;
-      commentList.insert(0, tempComment);
+      commentList.insert(0, Comment.clone(tempComment));
+
+      tempComment = Comment();
+
+      currentState.reset();
 
       state.render(() {});
     } catch (e) {
