@@ -93,14 +93,23 @@ class _CommentViewState extends State<CommentViewScreen> {
                                             onSaved: con.saveCommentContent,
                                           ),
                                         ),
-                                        ElevatedButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context),
-                                          child: Text('Cancel'),
-                                        ),
-                                        ElevatedButton(
-                                          onPressed: () => con.editComment(i),
-                                          child: Text('Submit'),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            ElevatedButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context),
+                                              child: Text('Cancel'),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () =>
+                                                  con.editComment(i),
+                                              child: Text('Edit'),
+                                              style: ElevatedButton.styleFrom(
+                                                  primary: Colors.green),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
@@ -116,20 +125,26 @@ class _CommentViewState extends State<CommentViewScreen> {
                                         AlertDialog(
                                       title: Text('Confirm Delete'),
                                       actions: [
-                                        ElevatedButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context),
-                                          child: Text('Cancel'),
-                                        ),
-                                        ElevatedButton(
-                                          onPressed: () => {
-                                            con.deleteComment(i),
-                                            Navigator.pop(context),
-                                          },
-                                          child: Text('Delete'),
-                                          style: ElevatedButton.styleFrom(
-                                            primary: Colors.red,
-                                          ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            ElevatedButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context),
+                                              child: Text('Cancel'),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () => {
+                                                con.deleteComment(i),
+                                                Navigator.pop(context),
+                                              },
+                                              child: Text('Delete'),
+                                              style: ElevatedButton.styleFrom(
+                                                primary: Colors.red,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
