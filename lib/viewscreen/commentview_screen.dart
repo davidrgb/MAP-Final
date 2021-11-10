@@ -78,10 +78,34 @@ class _CommentViewState extends State<CommentViewScreen> {
                                       primary: Colors.green),
                                 ),
                                 ElevatedButton(
-                                  onPressed: () => con.deleteComment(i),
+                                  onPressed: () => showDialog<String>(
+                                    context: context,
+                                    builder: (BuildContext context) =>
+                                        AlertDialog(
+                                      title: Text('Confirm Delete'),
+                                      actions: [
+                                        ElevatedButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          child: Text('Cancel'),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () => {
+                                            con.deleteComment(i),
+                                            Navigator.pop(context),
+                                          },
+                                          child: Text('Delete'),
+                                          style: ElevatedButton.styleFrom(
+                                            primary: Colors.red,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                   child: Text('Delete'),
                                   style: ElevatedButton.styleFrom(
-                                      primary: Colors.red),
+                                    primary: Colors.red,
+                                  ),
                                 ),
                               ],
                             )
@@ -177,7 +201,7 @@ class _Controller {
   void deleteComment(int index) async {
     try {
       await FirestoreController.deleteComment(comment: commentList[index]);
-      
+
       state.render(() => {commentList.removeAt(index)});
     } catch (e) {
       if (Constant.DEV) print('======== Delete comment failed: $e');
