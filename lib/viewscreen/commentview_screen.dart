@@ -26,6 +26,7 @@ class CommentViewScreen extends StatefulWidget {
 class _CommentViewState extends State<CommentViewScreen> {
   late _Controller con;
   GlobalKey<FormState> newCommentFormKey = GlobalKey();
+  GlobalKey<FormState> editCommentFormKey = GlobalKey();
 
   @override
   void initState() {
@@ -72,7 +73,38 @@ class _CommentViewState extends State<CommentViewScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () => showDialog<String>(
+                                    context: context,
+                                    builder: (BuildContext context) =>
+                                        AlertDialog(
+                                      title: Text('Edit Comment'),
+                                      actions: [
+                                        Form(
+                                          key: editCommentFormKey,
+                                          child: TextFormField(
+                                            decoration: InputDecoration(
+                                              hintText: 'Edit comment',
+                                            ),
+                                            initialValue:
+                                                con.commentList[i].content,
+                                            maxLines: 3,
+                                            autocorrect: true,
+                                            validator: Comment.validateContent,
+                                            onSaved: con.saveCommentContent,
+                                          ),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          child: Text('Cancel'),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () => con.editComment(i),
+                                          child: Text('Submit'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                   child: Text('Edit'),
                                   style: ElevatedButton.styleFrom(
                                       primary: Colors.green),
@@ -147,6 +179,7 @@ class _Controller {
   late _CommentViewState state;
   Comment tempComment = Comment();
   late List<Comment> commentList;
+  late String contentEdit;
 
   _Controller(this.state) {
     commentList = [];
@@ -209,6 +242,44 @@ class _Controller {
         context: state.context,
         message: 'Delete comment failed: $e',
       );
+    }
+  }
+
+  void editComment(int index) async {
+    FormState? currentState = state.editCommentFormKey.currentState;
+    if (currentState == null || !currentState.validate()) return;
+    currentState.save();
+
+    try {
+      Map<String, dynamic> updateInfo = {};
+
+      if (tempComment.content != commentList[index].content)
+        updateInfo[Comment.CONTENT] = tempComment.content;
+
+      tempComment.createdBy = commentList[index].createdBy;
+      tempComment.photoMemoID = commentList[index].photoMemoID;
+      tempComment.docId = commentList[index].docId;
+      tempComment.timestamp = commentList[index].timestamp;
+
+      if (updateInfo.isNotEmpty) {
+        tempComment.timestamp = DateTime.now();
+        updateInfo[Comment.TIMESTAMP] = tempComment.timestamp;
+        await FirestoreController.updateComment(
+          docId: tempComment.docId!,
+          updateInfo: updateInfo,
+        );
+        commentList.removeAt(index);
+        commentList.insert(0, Comment.clone(tempComment));
+        tempComment = Comment();
+
+        currentState.reset();
+
+        state.render(() => {Navigator.pop(state.context)});
+      }
+    } catch (e) {
+      if (Constant.DEV) print('======== Edit comment failed: $e');
+      MyDialog.showSnackBar(
+          context: state.context, message: 'Edit comment failed: $e');
     }
   }
 }
