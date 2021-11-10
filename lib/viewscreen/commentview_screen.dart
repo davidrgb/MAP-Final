@@ -63,7 +63,10 @@ class _CommentViewState extends State<CommentViewScreen> {
                         '${con.commentList[i].createdBy} at ${con.commentList[i].timestamp}',
                         style: Theme.of(context).textTheme.headline6,
                       ),
-                      Text(con.commentList[i].content, style: Theme.of(context).textTheme.subtitle1,),
+                      Text(
+                        con.commentList[i].content,
+                        style: Theme.of(context).textTheme.subtitle1,
+                      ),
                       con.commentList[i].createdBy == widget.user.email!
                           ? Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -75,7 +78,7 @@ class _CommentViewState extends State<CommentViewScreen> {
                                       primary: Colors.green),
                                 ),
                                 ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () => con.deleteComment(i),
                                   child: Text('Delete'),
                                   style: ElevatedButton.styleFrom(
                                       primary: Colors.red),
@@ -167,6 +170,20 @@ class _Controller {
       MyDialog.showSnackBar(
         context: state.context,
         message: 'Add new comment failed: $e',
+      );
+    }
+  }
+
+  void deleteComment(int index) async {
+    try {
+      await FirestoreController.deleteComment(comment: commentList[index]);
+      
+      state.render(() => {commentList.removeAt(index)});
+    } catch (e) {
+      if (Constant.DEV) print('======== Delete comment failed: $e');
+      MyDialog.showSnackBar(
+        context: state.context,
+        message: 'Delete comment failed: $e',
       );
     }
   }
