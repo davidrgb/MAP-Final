@@ -119,9 +119,11 @@ class _Controller {
           ARGS.USER: state.widget.user,
           ARGS.OnePhotoMemo: photoMemoList[index],
         });
+    checkComments();
   }
 
   void checkComments() async {
+    if (memoHasCommments.isNotEmpty) memoHasCommments.clear();
     for (int i = 0; i < photoMemoList.length; i++) {
       late List<Comment> results;
       try {
