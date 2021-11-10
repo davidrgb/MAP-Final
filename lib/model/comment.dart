@@ -3,12 +3,14 @@ class Comment {
   static const CONTENT = 'content';
   static const TIMESTAMP = 'timestamp';
   static const PHOTOMEMOID = 'photomemoid';
+  static const PHOTOMEMOCREATOR = 'photomemocreator';
 
   String? docId;
   late String createdBy;
   late String content;
   DateTime? timestamp;
   late String photoMemoID;
+  late String photoMemoCreator;
 
   Comment({
     this.docId,
@@ -16,6 +18,7 @@ class Comment {
     this.content = '',
     this.timestamp,
     this.photoMemoID = '',
+    this.photoMemoCreator = '',
   });
 
   Comment.clone(Comment c) {
@@ -24,6 +27,7 @@ class Comment {
     this.content = c.content;
     this.timestamp = c.timestamp;
     this.photoMemoID = c.photoMemoID;
+    this.photoMemoCreator = c.photoMemoCreator;
   }
 
   void assign(Comment c) {
@@ -32,6 +36,7 @@ class Comment {
     this.content = c.content;
     this.timestamp = c.timestamp;
     this.photoMemoID = c.photoMemoID;
+    this.photoMemoCreator = c.photoMemoCreator;
   }
 
   Map<String, dynamic> toFirestoreDoc() {
@@ -40,6 +45,7 @@ class Comment {
       CONTENT: this.content,
       TIMESTAMP: this.timestamp,
       PHOTOMEMOID: this.photoMemoID,
+      PHOTOMEMOCREATOR: this.photoMemoCreator,
     };
   }
 
@@ -57,6 +63,7 @@ class Comment {
           ? DateTime.fromMillisecondsSinceEpoch(
               doc[TIMESTAMP].millisecondsSinceEpoch)
           : DateTime.now(),
+      photoMemoCreator: doc[PHOTOMEMOCREATOR] ?? 'N/A',
     );
   }
 

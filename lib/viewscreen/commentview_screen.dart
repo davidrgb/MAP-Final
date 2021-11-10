@@ -68,56 +68,68 @@ class _CommentViewState extends State<CommentViewScreen> {
                         con.commentList[i].content,
                         style: Theme.of(context).textTheme.subtitle1,
                       ),
-                      con.commentList[i].createdBy == widget.user.email!
+                      con.commentList[i].createdBy == widget.user.email! ||
+                              con.commentList[i].photoMemoCreator ==
+                                  widget.user.email!
                           ? Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                ElevatedButton(
-                                  onPressed: () => showDialog<String>(
-                                    context: context,
-                                    builder: (BuildContext context) =>
-                                        AlertDialog(
-                                      title: Text('Edit Comment'),
-                                      actions: [
-                                        Form(
-                                          key: editCommentFormKey,
-                                          child: TextFormField(
-                                            decoration: InputDecoration(
-                                              hintText: 'Edit comment',
-                                            ),
-                                            initialValue:
-                                                con.commentList[i].content,
-                                            maxLines: 3,
-                                            autocorrect: true,
-                                            validator: Comment.validateContent,
-                                            onSaved: con.saveCommentContent,
+                                con.commentList[i].createdBy ==
+                                        widget.user.email!
+                                    ? ElevatedButton(
+                                        onPressed: () => showDialog<String>(
+                                          context: context,
+                                          builder: (BuildContext context) =>
+                                              AlertDialog(
+                                            title: Text('Edit Comment'),
+                                            actions: [
+                                              Form(
+                                                key: editCommentFormKey,
+                                                child: TextFormField(
+                                                  decoration: InputDecoration(
+                                                    hintText: 'Edit comment',
+                                                  ),
+                                                  initialValue: con
+                                                      .commentList[i].content,
+                                                  maxLines: 3,
+                                                  autocorrect: true,
+                                                  validator:
+                                                      Comment.validateContent,
+                                                  onSaved:
+                                                      con.saveCommentContent,
+                                                ),
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  ElevatedButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(context),
+                                                    child: Text('Cancel'),
+                                                  ),
+                                                  ElevatedButton(
+                                                    onPressed: () =>
+                                                        con.editComment(i),
+                                                    child: Text('Edit'),
+                                                    style: ElevatedButton
+                                                        .styleFrom(
+                                                            primary:
+                                                                Colors.green),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            ElevatedButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(context),
-                                              child: Text('Cancel'),
-                                            ),
-                                            ElevatedButton(
-                                              onPressed: () =>
-                                                  con.editComment(i),
-                                              child: Text('Edit'),
-                                              style: ElevatedButton.styleFrom(
-                                                  primary: Colors.green),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  child: Text('Edit'),
-                                  style: ElevatedButton.styleFrom(
-                                      primary: Colors.green),
-                                ),
+                                        child: Text('Edit'),
+                                        style: ElevatedButton.styleFrom(
+                                            primary: Colors.green),
+                                      )
+                                    : SizedBox(
+                                        height: 1.0,
+                                      ),
                                 ElevatedButton(
                                   onPressed: () => showDialog<String>(
                                     context: context,
@@ -227,6 +239,7 @@ class _Controller {
       tempComment.createdBy = state.widget.user.email!;
       tempComment.timestamp = DateTime.now();
       tempComment.photoMemoID = state.widget.photoMemo.docId!;
+      tempComment.photoMemoCreator = state.widget.photoMemo.createdBy;
 
       String docId = await FirestoreController.addComment(comment: tempComment);
       tempComment.docId = docId;
@@ -275,6 +288,7 @@ class _Controller {
       tempComment.photoMemoID = commentList[index].photoMemoID;
       tempComment.docId = commentList[index].docId;
       tempComment.timestamp = commentList[index].timestamp;
+      tempComment.photoMemoCreator = commentList[index].photoMemoCreator;
 
       if (updateInfo.isNotEmpty) {
         tempComment.timestamp = DateTime.now();
