@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:lesson3/controller/firestore_controller.dart';
 import 'package:lesson3/model/comment.dart';
 import 'package:lesson3/model/constant.dart';
+import 'package:lesson3/model/favorite.dart';
 import 'package:lesson3/model/photomemo.dart';
 import 'package:lesson3/viewscreen/commentview_screen.dart';
 import 'package:lesson3/viewscreen/view/mydialog.dart';
@@ -67,14 +68,48 @@ class _SharedWithState extends State<SharedWithScreen> {
                                         ? Positioned(
                                             bottom: 10.0,
                                             right: 10.0,
-                                            child: Icon(
-                                              Icons.comment,
-                                              size: 36.0,
+                                            child: CircleAvatar(
+                                              radius: 24,
+                                              backgroundColor: Colors.blue,
+                                              child: Icon(
+                                                Icons.comment,
+                                                size: 32.0,
+                                                color: Colors.white,
+                                              ),
                                             ),
                                           )
                                         : SizedBox(
                                             height: 1.0,
                                           ),
+                                  Positioned(
+                                    left: 10.0,
+                                    top: 10.0,
+                                    child: CircleAvatar(
+                                      radius: 24,
+                                      backgroundColor: Colors.blue,
+                                      child: IconButton(
+                                        onPressed: () => con.favorite(i),
+                                        icon: (con.favorites.isNotEmpty)
+                                            ? con.favorites[i]
+                                                ? Icon(
+                                                    Icons.favorite,
+                                                    color: Colors.white,
+                                                    size: 32.0,
+                                                  )
+                                                : Icon(
+                                                    Icons.favorite_outline,
+                                                    color: Colors.white,
+                                                    size: 32.0,
+                                                  )
+                                            : Icon(
+                                                Icons.favorite_outline,
+                                                color: Colors.white,
+                                                size: 32.0,
+                                              ),
+                                        padding: EdgeInsets.zero,
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -107,10 +142,75 @@ class _Controller {
   late _SharedWithState state;
   late List<PhotoMemo> photoMemoList;
   late List<bool> memoHasCommments;
+  late List<bool> favorites;
   _Controller(this.state) {
     photoMemoList = state.widget.photoMemoList;
     memoHasCommments = [];
     checkComments();
+    favorites = [];
+    checkFavorites();
+  }
+
+  void favorite(int index) async {
+    late Favorite result;
+    try {
+      result = await FirestoreController.getFavorites(
+          email: state.widget.user.email!);
+    } catch (e) {
+      if (Constant.DEV) print('======== Failed to get favorites: $e');
+      MyDialog.showSnackBar(
+          context: state.context,
+          message: '======== Failed to get favorites: $e');
+    }
+    try {
+      if (favorites[index]) {
+        result.photoMemoIds.remove(photoMemoList[index].docId);
+        favorites.removeAt(index);
+        favorites.insert(index, false);
+      } else {
+        result.photoMemoIds.add(photoMemoList[index].docId);
+        favorites.removeAt(index);
+        favorites.insert(index, true);
+      }
+      print('======== ${result.photoMemoIds}');
+      if (result.docId == null) {
+        result.favoritedBy = state.widget.user.email!;
+        await FirestoreController.addFavorite(favorite: result);
+      } else {
+        Map<String, dynamic> updateInfo = {};
+        updateInfo[Favorite.PHOTOMEMOIDS] = result.photoMemoIds;
+        await FirestoreController.updateFavorite(
+            docId: result.docId!, updateInfo: updateInfo);
+      }
+    } catch (e) {
+      if (Constant.DEV) print('======== Failed to update favorites: $e');
+      MyDialog.showSnackBar(
+          context: state.context,
+          message: '======== Failed to update favorites: $e');
+    }
+    state.render(() {});
+  }
+
+  void checkFavorites() async {
+    late Favorite result;
+    try {
+      result = await FirestoreController.getFavorites(
+          email: state.widget.user.email!);
+    } catch (e) {
+      if (Constant.DEV) print('======== Failed to get favorites: $e');
+      MyDialog.showSnackBar(
+          context: state.context,
+          message: '======== Failed to get favorites: $e');
+    }
+    print(result.photoMemoIds);
+    for (int i = 0; i < photoMemoList.length; i++) {
+      if (result.photoMemoIds.contains(photoMemoList[i].docId)) {
+        favorites.insert(i, true);
+      } else {
+        favorites.insert(i, false);
+      }
+    }
+    print(favorites);
   }
 
   void onTap(int index) async {

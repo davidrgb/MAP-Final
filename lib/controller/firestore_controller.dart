@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lesson3/model/comment.dart';
 import 'package:lesson3/model/constant.dart';
+import 'package:lesson3/model/favorite.dart';
 import 'package:lesson3/model/photomemo.dart';
 
 class FirestoreController {
@@ -19,6 +20,15 @@ class FirestoreController {
     DocumentReference ref = await FirebaseFirestore.instance
         .collection(Constant.COMMENT_COLLECTION)
         .add(comment.toFirestoreDoc());
+    return ref.id;
+  }
+
+  static Future<String> addFavorite({
+    required Favorite favorite,
+  }) async {
+    DocumentReference ref = await FirebaseFirestore.instance
+        .collection(Constant.FAVORITE_COLLECTION)
+        .add(favorite.toFirestoreDoc());
     return ref.id;
   }
 
@@ -84,6 +94,16 @@ class FirestoreController {
         .update(updateInfo);
   }
 
+  static Future<void> updateFavorite({
+    required String docId,
+    required Map<String, dynamic> updateInfo,
+  }) async {
+    await FirebaseFirestore.instance
+        .collection(Constant.FAVORITE_COLLECTION)
+        .doc(docId)
+        .update(updateInfo);
+  }
+
   static Future<List<PhotoMemo>> searchImages({
     required String createdBy,
     required List<String> searchLabels,
@@ -138,5 +158,22 @@ class FirestoreController {
       if (p != null) results.add(p);
     });
     return results;
+  }
+
+  static Future<Favorite> getFavorites({
+    required String email,
+  }) async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection(Constant.FAVORITE_COLLECTION)
+        .where(Favorite.FAVORITED_BY, isEqualTo: email)
+        .get();
+
+    Favorite result = Favorite();
+    querySnapshot.docs.forEach((doc) {
+      var f = Favorite.fromFirestoreDoc(
+          doc: doc.data() as Map<String, dynamic>, docId: doc.id);
+      result = f!;
+    });
+    return result;
   }
 }
