@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:lesson3/model/constant.dart';
 import 'package:lesson3/viewscreen/addnewphotomemo_screen.dart';
 import 'package:lesson3/viewscreen/detailedview_screen.dart';
+import 'package:lesson3/viewscreen/favorite_screen.dart';
 import 'package:lesson3/viewscreen/internalerror_screen.dart';
 import 'package:lesson3/viewscreen/sharedwith_screen.dart';
 import 'package:lesson3/viewscreen/signin_screen.dart';
@@ -86,6 +87,17 @@ class FinalApp extends StatelessWidget {
             var user = argument[ARGS.USER];
             var photoMemo = argument[ARGS.OnePhotoMemo];
             return CommentViewScreen(user: user, photoMemo: photoMemo);
+          }
+        },
+        FavoriteScreen.routeName: (context) {
+          Object? args = ModalRoute.of(context)?.settings.arguments;
+          if (args == null) {
+            return InternalErrorScreen('args is null at FavoriteScreen');
+          } else {
+            var argument = args as Map;
+            var user = argument[ARGS.USER];
+            var photoMemoList = argument[ARGS.PhotoMemoList];
+            return FavoriteScreen(user: user, photoMemoList: photoMemoList);
           }
         },
       },

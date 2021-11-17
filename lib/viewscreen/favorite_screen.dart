@@ -6,24 +6,23 @@ import 'package:lesson3/model/constant.dart';
 import 'package:lesson3/model/favorite.dart';
 import 'package:lesson3/model/photomemo.dart';
 import 'package:lesson3/viewscreen/commentview_screen.dart';
-import 'package:lesson3/viewscreen/favorite_screen.dart';
 import 'package:lesson3/viewscreen/view/mydialog.dart';
 import 'package:lesson3/viewscreen/view/webimage.dart';
 
-class SharedWithScreen extends StatefulWidget {
+class FavoriteScreen extends StatefulWidget {
   final List<PhotoMemo> photoMemoList;
   final User user;
 
-  SharedWithScreen({required this.photoMemoList, required this.user});
+  FavoriteScreen({required this.photoMemoList, required this.user});
 
-  static const routeName = '/sharedWithScreen';
+  static const routeName = '/favoriteScreen';
   @override
   State<StatefulWidget> createState() {
-    return _SharedWithState();
+    return _FavoriteState();
   }
 }
 
-class _SharedWithState extends State<SharedWithScreen> {
+class _FavoriteState extends State<FavoriteScreen> {
   late _Controller con;
 
   @override
@@ -38,17 +37,11 @@ class _SharedWithState extends State<SharedWithScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Shared With ${widget.user.email}'),
-        actions: [
-          IconButton(
-            onPressed: con.favoriteScreen,
-            icon: Icon(Icons.favorite),
-          ),
-        ],
+        title: Text('${widget.user.email} Favorites'),
       ),
       body: SingleChildScrollView(
         child: widget.photoMemoList.isEmpty
-            ? Text('No PhotoMemos shared with me',
+            ? Text('No favorites',
                 style: Theme.of(context).textTheme.headline6)
             : Column(
                 children: [
@@ -143,41 +136,22 @@ class _SharedWithState extends State<SharedWithScreen> {
       ),
     );
   }
+  
 }
 
 class _Controller {
-  late _SharedWithState state;
+  late _FavoriteState state;
   late List<PhotoMemo> photoMemoList;
   late List<bool> memoHasComments;
   late List<bool> favorites;
-  late List<PhotoMemo> favoritePhotoMemoList;
   _Controller(this.state) {
     photoMemoList = state.widget.photoMemoList;
     memoHasComments = [];
     checkComments();
     favorites = [];
-    checkFavorites();
-    favoritePhotoMemoList = [];
-  }
-
-  void favoriteScreen() async {
-    try {
-      await Navigator.pushNamed(
-        state.context,
-        FavoriteScreen.routeName,
-        arguments: {
-          ARGS.PhotoMemoList: favoritePhotoMemoList,
-          ARGS.USER: state.widget.user,
-        },
-      );
-    } catch (e) {
-      if (Constant.DEV) print('======== Failed to open favorites screen: $e');
-      MyDialog.showSnackBar(
-          context: state.context,
-          message: '======== Failed to open favorites screen: $e');
+    for (int i = 0; i < photoMemoList.length; i++) {
+      favorites.insert(i, true);
     }
-    await checkFavorites();
-    state.render((){});
   }
 
   void favorite(int index) async {
@@ -196,12 +170,10 @@ class _Controller {
         result.photoMemoIds.remove(photoMemoList[index].docId);
         favorites.removeAt(index);
         favorites.insert(index, false);
-        favoritePhotoMemoList.add(photoMemoList[index]);
       } else {
         result.photoMemoIds.add(photoMemoList[index].docId);
         favorites.removeAt(index);
         favorites.insert(index, true);
-        favoritePhotoMemoList.add(photoMemoList[index]);
       }
       if (result.docId == null) {
         result.favoritedBy = state.widget.user.email!;
@@ -219,29 +191,6 @@ class _Controller {
           message: '======== Failed to update favorites: $e');
     }
     state.render(() {});
-  }
-
-  Future<void> checkFavorites() async {
-    late Favorite result;
-    try {
-      result = await FirestoreController.getFavorites(
-          email: state.widget.user.email!);
-    } catch (e) {
-      if (Constant.DEV) print('======== Failed to get favorites: $e');
-      MyDialog.showSnackBar(
-          context: state.context,
-          message: '======== Failed to get favorites: $e');
-    }
-    favorites.clear();
-    favoritePhotoMemoList.clear();
-    for (int i = 0; i < photoMemoList.length; i++) {
-      if (result.photoMemoIds.contains(photoMemoList[i].docId)) {
-        favorites.insert(i, true);
-        favoritePhotoMemoList.add(photoMemoList[i]);
-      } else {
-        favorites.insert(i, false);
-      }
-    }
   }
 
   void onTap(int index) async {
