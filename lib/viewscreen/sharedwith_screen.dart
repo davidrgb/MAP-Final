@@ -196,7 +196,7 @@ class _Controller {
         result.photoMemoIds.remove(photoMemoList[index].docId);
         favorites.removeAt(index);
         favorites.insert(index, false);
-        favoritePhotoMemoList.add(photoMemoList[index]);
+        favoritePhotoMemoList.remove(photoMemoList[index]);
       } else {
         result.photoMemoIds.add(photoMemoList[index].docId);
         favorites.removeAt(index);
