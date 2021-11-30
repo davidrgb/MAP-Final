@@ -22,4 +22,26 @@ class GoogleMLController {
     }
     return results;
   }
+
+  static Future<List<String>> getImageText({
+    required File photo,
+  }) async {
+    var inputImage = InputImage.fromFile(photo);
+    final textRecognition = GoogleMlKit.vision.textDetector();
+    final RecognisedText recognizedText = await textRecognition.processImage(inputImage);
+    textRecognition.close();
+
+    var results = <String>[];
+    for (TextBlock t in recognizedText.blocks) {
+      for (TextLine l in t.lines) {
+        for (TextElement e in l.elements) {
+          var words = e.text.split(RegExp('(,| )+')).toList();
+          for (var w in words) {
+          if (w.trim().isNotEmpty && !results.contains(w.trim().toLowerCase())) results.add(w.trim().toLowerCase());
+          }
+        }
+      }
+    }
+    return results;
+  }
 }

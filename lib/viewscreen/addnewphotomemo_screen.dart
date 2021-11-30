@@ -27,6 +27,7 @@ class _AddNewPhotoMemoState extends State<AddNewPhotoMemoScreen> {
   late _Controller con;
   GlobalKey<FormState> formKey = GlobalKey();
   File? photo;
+  bool useLabeler = true;
 
   _AddNewPhotoMemoState() {
     con = _Controller(this);
@@ -110,6 +111,18 @@ class _AddNewPhotoMemoState extends State<AddNewPhotoMemoScreen> {
                 validator: PhotoMemo.validateSharedWith,
                 onSaved: con.saveSharedWith,
               ),
+              ToggleButtons(
+                children: [
+                  Text('Image Labeler'),
+                  Text('Text Detector'),
+                ],
+                isSelected: [useLabeler, !useLabeler],
+                onPressed: (int index) {
+                  if (index == 0) useLabeler = true;
+                  else useLabeler = false;
+                  render((){});
+                },
+              ),
             ],
           ),
         ),
@@ -153,7 +166,9 @@ class _Controller {
             });
           });
 
-      List<String> recognitions = await GoogleMLController.getImageLabels(photo: state.photo!);
+      List<String> recognitions;
+      if (state.useLabeler) recognitions = await GoogleMLController.getImageLabels(photo: state.photo!);
+      else recognitions = await GoogleMLController.getImageText(photo: state.photo!);
       tempMemo.imageLabels.addAll(recognitions);
 
       tempMemo.photoFilename = photoInfo[ARGS.Filename];
@@ -161,14 +176,14 @@ class _Controller {
       tempMemo.createdBy = state.widget.user.email!;
       tempMemo.timestamp = DateTime.now();
 
-      String docId = await FirestoreController.addPhotoMemo(photoMemo: tempMemo);
+      String docId =
+          await FirestoreController.addPhotoMemo(photoMemo: tempMemo);
       tempMemo.docId = docId;
       state.widget.photoMemoList.insert(0, tempMemo);
 
       MyDialog.circularProgressStop(state.context);
 
       Navigator.pop(state.context);
-
     } catch (e) {
       MyDialog.circularProgressStop(state.context);
       if (Constant.DEV) print('======== Add new photomemo failed: $e');
