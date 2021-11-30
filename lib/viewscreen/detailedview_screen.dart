@@ -138,7 +138,7 @@ class _DetailedViewState extends State<DetailedViewScreen> {
               ),
               Constant.DEV
                   ? Text(
-                    'Image Labels by ML\n${con.tempMemo.imageLabels}'
+                    'Search Keys\n${con.tempMemo.imageLabels}'
                   )
                   : SizedBox(
                       height: 1.0,
