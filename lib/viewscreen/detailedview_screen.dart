@@ -31,6 +31,9 @@ class _DetailedViewState extends State<DetailedViewScreen> {
   late _Controller con;
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
   String? progressMessage;
+  bool useLabeler = false;
+  bool updateLabels = false;
+  List<bool> states = [false, false];
 
   @override
   void initState() {
@@ -137,9 +140,29 @@ class _DetailedViewState extends State<DetailedViewScreen> {
                 onSaved: con.saveSharedWith,
               ),
               Constant.DEV
-                  ? Text(
-                    'Search Keys\n${con.tempMemo.imageLabels}'
-                  )
+                  ? Text('Search Keys\n${con.tempMemo.imageLabels}')
+                  : SizedBox(
+                      height: 1.0,
+                    ),
+              editMode
+                  ? ToggleButtons(
+                      children: [
+                        Text('Image Labeler'),
+                        Text('Text Detector'),
+                      ],
+                      isSelected: states,
+                      onPressed: (int index) {
+                        if (index == 0) {
+                          useLabeler = true;
+                          states = [true, false];
+                        } else {
+                          useLabeler = false;
+                          states = [false, true];
+                        }
+                        updateLabels = true;
+                        render(() {});
+                      },
+                    )
                   : SizedBox(
                       height: 1.0,
                     ),
@@ -166,6 +189,11 @@ class _Controller {
           : ImageSource.gallery;
       XFile? image = await ImagePicker().pickImage(source: imageSource);
       if (image == null) return;
+      if (listEquals(state.states, [false, false])) {
+        state.states = [true, false];
+        state.useLabeler = true;
+        state.updateLabels = true;
+      }
       state.render(() => photo = File(image.path));
     } catch (e) {
       MyDialog.showSnackBar(
@@ -195,12 +223,28 @@ class _Controller {
             });
           },
         );
-        List<String> recognitions = await GoogleMLController.getImageLabels(photo: photo!);
-        tempMemo.imageLabels = recognitions;
 
         tempMemo.photoURL = photoInfo[ARGS.DownloadURL];
         updateInfo[PhotoMemo.PHOTO_URL] = tempMemo.photoURL;
-        updateInfo[PhotoMemo.IMAGE_LABELS] = tempMemo.imageLabels;
+      }
+
+      if (state.updateLabels) {
+        List<String> recognitions;
+        File labelerPhoto = photo != null
+            ? photo!
+            : await CloudStorageController.getPhotoFile(
+                filename: state.widget.photoMemo.photoFilename);
+        if (state.useLabeler)
+          recognitions =
+              await GoogleMLController.getImageLabels(photo: labelerPhoto);
+        else
+          recognitions =
+              await GoogleMLController.getImageText(photo: labelerPhoto);
+        tempMemo.imageLabels = recognitions;
+
+        if (!listEquals(
+            tempMemo.imageLabels, state.widget.photoMemo.imageLabels))
+          updateInfo[PhotoMemo.IMAGE_LABELS] = tempMemo.imageLabels;
       }
 
       if (tempMemo.title != state.widget.photoMemo.title)

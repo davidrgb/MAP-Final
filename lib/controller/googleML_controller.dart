@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:google_ml_kit/google_ml_kit.dart';
 
 class GoogleMLController {
-
   static const MIN_CONFIDENCE = 0.5;
 
   static Future<List<String>> getImageLabels({
@@ -11,7 +10,8 @@ class GoogleMLController {
   }) async {
     var inputImage = InputImage.fromFile(photo);
     final imageLabeler = GoogleMlKit.vision.imageLabeler();
-    final List<ImageLabel> imageLabels = await imageLabeler.processImage(inputImage);
+    final List<ImageLabel> imageLabels =
+        await imageLabeler.processImage(inputImage);
     imageLabeler.close();
 
     var results = <String>[];
@@ -28,7 +28,8 @@ class GoogleMLController {
   }) async {
     var inputImage = InputImage.fromFile(photo);
     final textRecognition = GoogleMlKit.vision.textDetector();
-    final RecognisedText recognizedText = await textRecognition.processImage(inputImage);
+    final RecognisedText recognizedText =
+        await textRecognition.processImage(inputImage);
     textRecognition.close();
 
     var results = <String>[];
@@ -37,7 +38,9 @@ class GoogleMLController {
         for (TextElement e in l.elements) {
           var words = e.text.split(RegExp('(,| )+')).toList();
           for (var w in words) {
-          if (w.trim().isNotEmpty && !results.contains(w.trim().toLowerCase())) results.add(w.trim().toLowerCase());
+            if (w.trim().isNotEmpty &&
+                !results.contains(w.trim().toLowerCase()))
+              results.add(w.trim().toLowerCase());
           }
         }
       }
